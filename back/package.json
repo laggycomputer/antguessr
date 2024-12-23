@@ -7,7 +7,7 @@
   "private": true,
   "scripts": {
     "codegen": "npx graphql-codegen --config codegen.ts",
-    "dev": "npx tsx server.ts",
+    "dev": "npx tsx watch server.ts",
     "build": "node esbuild.js",
     "start": "node ."
   },
