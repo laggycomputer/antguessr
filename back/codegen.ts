@@ -1,11 +1,18 @@
 import type { CodegenConfig } from "@graphql-codegen/cli"
 
 const config: CodegenConfig = {
-    schema: "https://localhost:4000/graphql",
-    documents: ["**/*.tsx"],
+    schema: "https://anteaterapi.com/v2/graphql",
+    documents: ["src/**/*.tsx"],
+    ignoreNoDocuments: true,
     generates: {
         "./src/gql/": {
             preset: "client",
+        },
+        "./schema.graphql": {
+            plugins: ["schema-ast"],
+            config: {
+                includeDirectives: true,
+            },
         },
     },
 }

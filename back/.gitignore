@@ -1,1 +1,3 @@
 server.bundle.js
+schema.graphql
+src/gql/

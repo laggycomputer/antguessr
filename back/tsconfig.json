@@ -10,6 +10,12 @@
     "esModuleInterop": true,
     "module": "NodeNext",
     "moduleResolution": "nodenext",
+    "plugins": [
+      {
+        "name": "@0no-co/graphqlsp",
+        "schema": "./schema.graphql"
+      }
+    ],
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "noFallthroughCasesInSwitch": true,
@@ -19,4 +25,3 @@
     "target": "ES2017"
   },
 }
-
