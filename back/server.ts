@@ -33,6 +33,8 @@ app.use("/", express.static(path.join(__dirname, "front", "dist")))
 app.post("/api/start-game", (_req, res) => {
     const sessId = uuidv4()
     sessions[sessId] = { state: "nextQuestion", score: 0 }
+    // yeet in 2 hours (this is dumb)
+    setTimeout(() => delete sessions[sessId], 1000 * 60 * 60 * 2)
     res.status(200).json({ id: sessId } as StartGameResponse)
 })
 
