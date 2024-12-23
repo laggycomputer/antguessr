@@ -24,13 +24,13 @@ const sessions = Object.create(null) as Record<string, {
 
 app.set("trust proxy", 1)
 
-app.get("/api/hi", function (_req, res) {
+app.get("/api/hi", (_req, res) => {
     res.send("hi")
 })
 
 app.use("/", express.static(path.join(__dirname, "front", "dist")))
 
-app.post("/api/start-game", function (_req, res) {
+app.post("/api/start-game", (_req, res) => {
     const sessId = uuidv4()
     sessions[sessId] = { state: "nextQuestion", score: 0 }
     res.status(200).json({ id: sessId } as StartGameResponse)
