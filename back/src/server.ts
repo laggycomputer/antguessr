@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from "uuid"
 
 import type { paths } from "./anteaterapi"
 import { courses, years } from "./course-pool"
-import { Question, StartGameResponse } from "./types"
+import { AnswerResponse, Question, StartGameResponse } from "./types"
 import { shuffle } from "./util"
 const app = express()
 
@@ -30,6 +30,10 @@ const sessions = Object.create(null) as Record<string, {
 type GradeData = paths["/v2/rest/grades/aggregateByCourse"]["get"]["responses"]["200"]["content"]["application/json"]["data"][0]
 type SavedOffering = [[string, string, string], GradeData | undefined]
 const offerings = shuffle(courses.map(c => years.map(y => [[...c, y], undefined] as SavedOffering)).flat())
+
+function makeQuestionID(department: string, courseNumber: string, year: string) {
+    return `${department}-${courseNumber}-${year}`
+}
 
 // app.use((_req, res, next) => {
 //     res.header("Access-Control-Allow-Origin", "*")
@@ -69,7 +73,8 @@ app.use("/api/privileged/*", (req, res, next) => {
 })
 
 app.get("/api/privileged/question", async (req, res) => {
-    if (sessions[req.headers["authorization"] as string]?.state !== "nextQuestion") {
+    const session = req.headers["authorization"] as string
+    if (sessions[session]?.state !== "nextQuestion") {
         return res.status(401).send("answer your question first!")
     }
 
@@ -92,11 +97,26 @@ app.get("/api/privileged/question", async (req, res) => {
         offerings.unshift(offering)
     }
 
+    const questionId = makeQuestionID(data.department, data.courseNumber, (year as string).toString())
+    sessions[session].state = { answering: questionId }
+
     // TODO
     return res.json({
-        id: `${data.department}-${data.courseNumber}-${year}`,
+        id: questionId,
         options: ["0", "1", "2", data.averageGPA?.toString()],
     } as Question)
+})
+
+app.post("/api/privileged/answer", (req, res) => {
+    const session = req.headers["authorization"] as string
+    if (typeof sessions[session]?.state !== "object" || !("answering" in (sessions[session].state))) {
+        return res.status(401).send("ask for a question first!")
+    }
+
+    // todo: check answer, manage score and session
+    const question = offerings.find(([[dept, courseNum, year]]) =>
+        makeQuestionID(dept, courseNum, year.toString()) == (sessions[session]?.state as { answering: string }).answering) as SavedOffering
+    return res.json({ correct: true } as AnswerResponse)
 })
 
 const port = process.env["PORT"] || 3939

@@ -8,6 +8,6 @@ export type Question = {
     options: string[]
 }
 
-export type ValidateAnswerResponse = {
+export type AnswerResponse = {
     correct: boolean
 }

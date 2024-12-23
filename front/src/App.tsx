@@ -1,7 +1,7 @@
 "use client"
 
-import { StartGameResponse } from "../../back/src/types"
 import { useEffect, useState } from "react"
+import { AnswerResponse, StartGameResponse } from "../../back/src/types"
 
 type Question = {
     id: string
@@ -29,18 +29,18 @@ export default function QuizApp() {
     }, [])
 
     const handleAnswer = async (answerIndex: number) => {
-        // const { correct } = (await fetch("/api/privileged/validate-answer", {
-        //     method: "POST",
-        //     headers: { "Content-Type": "application/json" },
-        //     body: JSON.stringify({ questionId: (currentQuestion as Question).id, answerIndex }),
-        // }).then(r => r.json()) as ValidateAnswerResponse)
+        const { correct } = (await fetch("/api/privileged/answer", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session}` },
+            body: JSON.stringify({ questionId: (currentQuestion as Question).id, answerIndex }),
+        }).then(r => r.json()) as AnswerResponse)
 
-        // if (correct) {
-        //     setScore(score + 1)
-        //     await getNextQuestion(session as string)
-        // } else {
-        //     setShowScore(true)
-        // }
+        if (correct) {
+            setScore(score + 1)
+            await getNextQuestion(session as string)
+        } else {
+            setShowScore(true)
+        }
     }
 
     const resetQuiz = () => {
