@@ -10,10 +10,10 @@ import { Fetcher } from "openapi-typescript-fetch"
 import express from "express"
 import { v4 as uuidv4 } from "uuid"
 
-import type { paths } from "./anteaterapi.js"
-import { courses, years } from "./course-pool.js"
-import { StartGameResponse } from "./types.js"
-import { shuffle } from "./util.js"
+import type { paths } from "./anteaterapi"
+import { courses, years } from "./course-pool"
+import { StartGameResponse } from "./types"
+import { shuffle } from "./util"
 const app = express()
 
 const fetcher = Fetcher.for<paths>()
