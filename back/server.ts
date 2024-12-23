@@ -7,21 +7,33 @@ const __dirname = path.dirname(__filename)
 
 import "dotenv/config"
 import express from "express"
+import { v4 as uuidv4 } from "uuid"
 const app = express()
-app.locals = {}
 
-app.use((_req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*")
-    res.header("Access-Control-Allow-Headers", "*")
-    next()
-})
+const sessions = Object.create(null) as Record<string, {
+    state: "nextQuestion" | { answering: string } | "enterName"
+    score: number
+}>
+
+// app.use((_req, res, next) => {
+//     res.header("Access-Control-Allow-Origin", "*")
+//     res.header("Access-Control-Allow-Headers", "*")
+//     next()
+// })
 
 app.set("trust proxy", 1)
 
 app.get("/api/hi", function (_req, res) {
     res.send("hi")
 })
+
 app.use("/", express.static(path.join(__dirname, "front", "dist")))
+
+app.post("/api/start-game", function (_req, res) {
+    const sessId = uuidv4()
+    sessions[sessId] = { state: "nextQuestion", score: 0 }
+    res.status(200).json({ id: sessId })
+})
 
 const port = process.env["PORT"] || 3939
 app.listen(port, async () => {
