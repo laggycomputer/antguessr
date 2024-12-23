@@ -1,0 +1,25 @@
+{
+  "name": "antguessr",
+  "version": "0.0.1",
+  "main": "back/index.js",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "export NODE_ENV=development; concurrently -n \"front,back\" -c magenta,blue \"cd front && npm run dev\" \"cd back && npm run dev\"",
+    "build": "npm install && cd back && npm run build && cd ../front && npm run build && cd ..",
+    "start": "cd back && npm run start",
+    "postinstall": "cd back && npm install; cd ../front && npm install; cd .."
+  },
+  "author": "laggycomputer",
+  "license": "UNLICENSED",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "concurrently": "^9.1.0",
+    "openapi-typescript": "^7.4.4",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
