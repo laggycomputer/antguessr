@@ -73,23 +73,28 @@ app.get("/api/privileged/question", async (req, res) => {
         return res.status(401).send("answer your question first!")
     }
 
-    const offering = offerings.pop() as SavedOffering
-    const [[department, courseNumber, year], existing] = offering
-    const data = existing ?? await client.GET("/v2/rest/grades/aggregateByCourse", {
-        params: {
-            query: {
-                department,
-                courseNumber,
-                year,
+    let data
+    let year
+    while (!data) {
+        const offering = offerings.pop() as SavedOffering
+        let [[department, courseNumber], existingData] = offering
+        year = offering[0][2]
+        data = existingData ?? await client.GET("/v2/rest/grades/aggregateByCourse", {
+            params: {
+                query: {
+                    department,
+                    courseNumber,
+                    year,
+                },
             },
-        },
-    }).then(r => r.data?.data[0]) as GradeData
-    offering[1] = data
-    offerings.unshift(offering)
+        }).then(r => r.data?.data[0]) as GradeData
+        offering[1] = data
+        offerings.unshift(offering)
+    }
 
     // TODO
     return res.json({
-        id: `${department}-${courseNumber}-${year}`,
+        id: `${data.department}-${data.courseNumber}-${year}`,
         options: ["0", "1", "2", data.averageGPA?.toString()],
     } as Question)
 })
