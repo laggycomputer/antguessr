@@ -5,9 +5,13 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "export NODE_ENV=development; npx concurrently -n \"front,back\" -c magenta,blue \"cd front && npm run dev\" \"cd back && npm run dev\""
   },
   "author": "laggycomputer",
   "license": "UNLICENSED",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "concurrently": "^9.1.0"
+  }
 }
