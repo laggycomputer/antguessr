@@ -1,13 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { AnswerResponse, StartGameResponse } from "../../back/src/types"
-
-type Question = {
-    id: string
-    question: string
-    options: string[]
-}
+import { AnswerResponse, Question, StartGameResponse } from "../../back/src/types"
 
 export default function QuizApp() {
     const [session, setSession] = useState<string | undefined>()
@@ -28,11 +22,11 @@ export default function QuizApp() {
         })()
     }, [])
 
-    const handleAnswer = async (answerIndex: number) => {
+    const handleAnswer = async (answer: number) => {
         const { correct } = (await fetch("/api/privileged/answer", {
             method: "POST",
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session}` },
-            body: JSON.stringify({ questionId: (currentQuestion as Question).id, answerIndex }),
+            body: JSON.stringify({ answer }),
         }).then(r => r.json()) as AnswerResponse)
 
         if (correct) {
@@ -68,7 +62,7 @@ export default function QuizApp() {
                         {currentQuestion.options.map((option, index) => (
                             <button
                                 key={index}
-                                onClick={() => handleAnswer(index)}>
+                                onClick={() => handleAnswer(option)}>
                                 {option}
                             </button>
                         ))}

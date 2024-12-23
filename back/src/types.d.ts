@@ -5,9 +5,10 @@ export type StartGameResponse = {
 export type Question = {
     id: string
     question: string
-    options: string[]
+    options: number[]
 }
 
 export type AnswerResponse = {
     correct: boolean
+    actual?: number
 }

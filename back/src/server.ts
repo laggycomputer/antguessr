@@ -35,6 +35,10 @@ function makeQuestionID(department: string, courseNumber: string, year: string) 
     return `${department}-${courseNumber}-${year}`
 }
 
+function transformGPA(gpa: number) {
+    return Math.round(gpa * 10) / 10
+}
+
 // app.use((_req, res, next) => {
 //     res.header("Access-Control-Allow-Origin", "*")
 //     res.header("Access-Control-Allow-Headers", "*")
@@ -93,6 +97,9 @@ app.get("/api/privileged/question", async (req, res) => {
                 },
             },
         }).then(r => r.data?.data[0]) as GradeData
+        if (data && "averageGPA" in data) {
+            data.averageGPA = transformGPA(data.averageGPA as number)
+        }
         offering[1] = data
         offerings.unshift(offering)
     }
@@ -103,7 +110,7 @@ app.get("/api/privileged/question", async (req, res) => {
     // TODO
     return res.json({
         id: questionId,
-        options: ["0", "1", "2", data.averageGPA?.toString()],
+        options: [0, 1, 2, data.averageGPA],
     } as Question)
 })
 
@@ -116,7 +123,8 @@ app.post("/api/privileged/answer", (req, res) => {
     // todo: check answer, manage score and session
     const question = offerings.find(([[dept, courseNum, year]]) =>
         makeQuestionID(dept, courseNum, year.toString()) == (sessions[session]?.state as { answering: string }).answering) as SavedOffering
-    return res.json({ correct: true } as AnswerResponse)
+    const correct = question[1]?.averageGPA == req.body
+    return res.json({ correct } as AnswerResponse)
 })
 
 const port = process.env["PORT"] || 3939
