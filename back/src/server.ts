@@ -20,7 +20,7 @@ const fetcher = Fetcher.for<paths>()
 const headers = process.env["ANTEATER_API_TOKEN"] ? { Authorization: `Bearer ${process.env["ANTEATER_API_TOKEN"]}` } : undefined
 
 fetcher.configure({
-    baseUrl: process.env.ANTEATER_API_ENDPOINT || "https://anteaterapi.com/v2/rest",
+    baseUrl: process.env.ANTEATER_API_ENDPOINT || "https://anteaterapi.com/",
     init: {
         headers,
     },
@@ -77,7 +77,7 @@ app.get("/api/privileged/question", (req, res) => {
 
     const offering = offerings.pop() as [[string, string, string], any]
     offerings.unshift(offering)
-    // const got =
+    const got = fetcher.path("/v2/rest/calendar")
 })
 
 const port = process.env["PORT"] || 3939
