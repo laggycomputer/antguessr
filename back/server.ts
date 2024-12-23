@@ -8,6 +8,7 @@ const __dirname = path.dirname(__filename)
 import "dotenv/config"
 import express from "express"
 import { v4 as uuidv4 } from "uuid"
+import { StartGameResponse } from "./types.js"
 const app = express()
 
 const sessions = Object.create(null) as Record<string, {
@@ -32,7 +33,7 @@ app.use("/", express.static(path.join(__dirname, "front", "dist")))
 app.post("/api/start-game", function (_req, res) {
     const sessId = uuidv4()
     sessions[sessId] = { state: "nextQuestion", score: 0 }
-    res.status(200).json({ id: sessId })
+    res.status(200).json({ id: sessId } as StartGameResponse)
 })
 
 const port = process.env["PORT"] || 3939
