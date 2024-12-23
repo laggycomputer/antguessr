@@ -38,6 +38,21 @@ app.post("/api/start-game", (_req, res) => {
     res.status(200).json({ id: sessId } as StartGameResponse)
 })
 
+app.use("/api/privileged/*", (req, res, next) => {
+    if (!("authorization" in req.headers)) {
+        return res.status(401).send("get a session kid")
+    }
+
+    const tok = (req.headers?.["authorization"] ?? "").replace("Bearer", "")
+    if (!(tok in sessions)) {
+        return res.status(401).send("bad session")
+    }
+
+    req.headers["key"] = tok
+
+    return next()
+})
+
 const port = process.env["PORT"] || 3939
 app.listen(port, async () => {
     console.log(`Ready at port ${port}`)
