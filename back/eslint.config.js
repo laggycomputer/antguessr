@@ -15,7 +15,8 @@ export default [
     {
         ignores: [
             "dist/**",
-            "backend/server.bundle.js",
+            "src/server.bundle.js",
+            "src/anteaterapi.d.ts",
         ],
     },
     pluginJs.configs.recommended,

@@ -6,6 +6,7 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "codegen": "openapi-typescript https://anteaterapi.com/openapi.json -o src/anteaterapi.d.ts",
     "dev": "tsx watch src/server.ts",
     "build": "node esbuild.js",
     "start": "node ."
@@ -28,6 +29,7 @@
     "esbuild": "^0.21.5",
     "express": "^4.20.0",
     "express-http-proxy": "^2.1.1",
+    "openapi-typescript-fetch": "^2.0.0",
     "uuid": "^11.0.3"
   }
 }

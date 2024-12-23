@@ -6,13 +6,25 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 import "dotenv/config"
+import { Fetcher } from "openapi-typescript-fetch"
 import express from "express"
 import { v4 as uuidv4 } from "uuid"
 
+import type { paths } from "./anteaterapi.js"
 import { courses, years } from "./course-pool.js"
 import { StartGameResponse } from "./types.js"
 import { shuffle } from "./util.js"
 const app = express()
+
+const fetcher = Fetcher.for<paths>()
+const headers = process.env["ANTEATER_API_TOKEN"] ? { Authorization: `Bearer ${process.env["ANTEATER_API_TOKEN"]}` } : undefined
+
+fetcher.configure({
+    baseUrl: process.env.ANTEATER_API_ENDPOINT || "https://anteaterapi.com/v2/rest",
+    init: {
+        headers,
+    },
+})
 
 const sessions = Object.create(null) as Record<string, {
     state: "nextQuestion" | { answering: string } | "enterName"
