@@ -59,7 +59,7 @@ app.use("/api/privileged/*", (req, res, next) => {
 })
 
 app.get("/api/privileged/question", (req, res) => {
-    if (sessions[req.headers["authorization"] as string].state !== "nextQuestion") {
+    if (sessions[req.headers["authorization"] as string]?.state !== "nextQuestion") {
         return res.status(401).send("answer your question first!")
     }
 
