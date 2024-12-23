@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from "uuid"
 
 import type { paths } from "./anteaterapi"
 import { courses, years } from "./course-pool"
-import { StartGameResponse } from "./types"
+import { Question, StartGameResponse } from "./types"
 import { shuffle } from "./util"
 const app = express()
 
@@ -27,7 +27,9 @@ const sessions = Object.create(null) as Record<string, {
     score: number
 }>
 
-const offerings = shuffle(courses.map(c => years.map(y => [[...c, y] as [string, string, string], undefined])).flat())
+type GradeData = paths["/v2/rest/grades/aggregateByCourse"]["get"]["responses"]["200"]["content"]["application/json"]["data"][0]
+type SavedOffering = [[string, string, string], GradeData | undefined]
+const offerings = shuffle(courses.map(c => years.map(y => [[...c, y], undefined] as SavedOffering)).flat())
 
 // app.use((_req, res, next) => {
 //     res.header("Access-Control-Allow-Origin", "*")
@@ -71,7 +73,7 @@ app.get("/api/privileged/question", async (req, res) => {
         return res.status(401).send("answer your question first!")
     }
 
-    const offering = offerings.pop() as [[string, string, string], any]
+    const offering = offerings.pop() as SavedOffering
     const [[department, courseNumber, year], existing] = offering
     const data = existing ?? await client.GET("/v2/rest/grades/aggregateByCourse", {
         params: {
@@ -81,11 +83,15 @@ app.get("/api/privileged/question", async (req, res) => {
                 year,
             },
         },
-    }).then(r => r.data?.data[0])
+    }).then(r => r.data?.data[0]) as GradeData
     offering[1] = data
     offerings.unshift(offering)
 
-    return res.json(data)
+    // TODO
+    return res.json({
+        id: `${department}-${courseNumber}-${year}`,
+        options: ["0", "1", "2", data.averageGPA?.toString()],
+    } as Question)
 })
 
 const port = process.env["PORT"] || 3939
