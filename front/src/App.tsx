@@ -7,7 +7,7 @@ export default function QuizApp() {
     const [session, setSession] = useState<string | undefined>()
     const [currentQuestion, setCurrentQuestion] = useState<Question | undefined>()
     const [score, setScore] = useState(0)
-    const [showScore, setShowScore] = useState(false)
+    const [gameOver, setGameOver] = useState(false)
 
     const getNextQuestion = async (session: string) => {
         const data = (await fetch("/api/privileged/question", { headers: { "Authorization": `Bearer ${session}` } }).then(r => r.json())) as Question
@@ -33,14 +33,16 @@ export default function QuizApp() {
             setScore(score + 1)
             await getNextQuestion(session as string)
         } else {
-            setShowScore(true)
+            setGameOver(true)
         }
     }
 
-    const resetQuiz = () => {
-        getNextQuestion(session as string)
+    const resetQuiz = async () => {
+        const { id } = (await fetch("/api/start-game", { method: "POST" }).then(r => r.json()) as StartGameResponse)
+        setSession(id)
+        getNextQuestion(id)
         setScore(0)
-        setShowScore(false)
+        setGameOver(false)
     }
 
     if (currentQuestion === undefined) {
@@ -50,13 +52,14 @@ export default function QuizApp() {
     return (
         <div>
             <h1>Quiz App</h1>
-            {showScore ? (
+            {gameOver ? (
                 <div>
-                    <h2>Your score: {score}</h2>
+                    <h2>Game over! Your score: {score}</h2>
                     <button onClick={resetQuiz}>Retry</button>
                 </div>
             ) : (
                 <div>
+                    <h2>Your score: {score}</h2>
                     <h3>{currentQuestion.question}</h3>
                     <div>
                         {currentQuestion.options.map((option, index) => (

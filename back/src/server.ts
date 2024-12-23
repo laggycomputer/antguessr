@@ -51,6 +51,7 @@ app.get("/api/hi", (_req, res) => {
     res.send("hi")
 })
 
+app.use(express.json())
 app.use("/", express.static(path.join(__dirname, "front", "dist")))
 
 app.post("/api/start-game", (_req, res) => {
@@ -111,6 +112,7 @@ app.get("/api/privileged/question", async (req, res) => {
     return res.json({
         id: questionId,
         options: [0, 1, 2, data.averageGPA],
+        question: `${data.department} ${data.courseNumber}, ${year}`,
     } as Question)
 })
 
@@ -120,11 +122,26 @@ app.post("/api/privileged/answer", (req, res) => {
         return res.status(401).send("ask for a question first!")
     }
 
-    // todo: check answer, manage score and session
     const question = offerings.find(([[dept, courseNum, year]]) =>
         makeQuestionID(dept, courseNum, year.toString()) == (sessions[session]?.state as { answering: string }).answering) as SavedOffering
-    const correct = question[1]?.averageGPA == req.body
-    return res.json({ correct } as AnswerResponse)
+    const correct = question[1]?.averageGPA?.toString() == req.body?.answer
+    console.log(question[1]?.averageGPA?.toString())
+    console.log(req.body)
+    if (correct) {
+        sessions[session].score += 1
+        sessions[session].state = "nextQuestion"
+        return res.json({
+            correct,
+            score: sessions[session].score,
+        } as AnswerResponse)
+    } else {
+        sessions[session].state = "enterName"
+        return res.json({
+            correct,
+            actual: question[1]?.averageGPA,
+            score: sessions[session].score,
+        } as AnswerResponse)
+    }
 })
 
 const port = process.env["PORT"] || 3939

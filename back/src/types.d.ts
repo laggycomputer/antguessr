@@ -9,6 +9,10 @@ export type Question = {
 }
 
 export type AnswerResponse = {
-    correct: boolean
-    actual?: number
+    correct: false
+    actual: number
+    score: number
+} | {
+    correct: true
+    score: number
 }
