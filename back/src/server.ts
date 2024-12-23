@@ -6,8 +6,8 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 import "dotenv/config"
-import { Fetcher } from "openapi-typescript-fetch"
 import express from "express"
+import createClient from "openapi-fetch"
 import { v4 as uuidv4 } from "uuid"
 
 import type { paths } from "./anteaterapi"
@@ -16,14 +16,10 @@ import { StartGameResponse } from "./types"
 import { shuffle } from "./util"
 const app = express()
 
-const fetcher = Fetcher.for<paths>()
 const headers = process.env["ANTEATER_API_TOKEN"] ? { Authorization: `Bearer ${process.env["ANTEATER_API_TOKEN"]}` } : undefined
-
-fetcher.configure({
+const client = createClient<paths>({
     baseUrl: process.env.ANTEATER_API_ENDPOINT || "https://anteaterapi.com",
-    init: {
-        headers,
-    },
+    headers,
 })
 
 const sessions = Object.create(null) as Record<string, {
@@ -70,14 +66,26 @@ app.use("/api/privileged/*", (req, res, next) => {
     return next()
 })
 
-app.get("/api/privileged/question", (req, res) => {
+app.get("/api/privileged/question", async (req, res) => {
     if (sessions[req.headers["authorization"] as string]?.state !== "nextQuestion") {
         return res.status(401).send("answer your question first!")
     }
 
     const offering = offerings.pop() as [[string, string, string], any]
+    const [[department, courseNumber, year], existing] = offering
+    const data = existing ?? await client.GET("/v2/rest/grades/aggregateByCourse", {
+        params: {
+            query: {
+                department,
+                courseNumber,
+                year,
+            },
+        },
+    }).then(r => r.data?.data[0])
+    offering[1] = data
     offerings.unshift(offering)
-    const got = fetcher.path("/v2/rest/calendar")
+
+    return res.json(data)
 })
 
 const port = process.env["PORT"] || 3939
