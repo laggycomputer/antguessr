@@ -1,0 +1,6 @@
+node_modules/
+dist/
+backend/data
+backend/server.bundle.js
+web/config.ts
+.env

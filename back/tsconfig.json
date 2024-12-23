@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "lib": [
+      "esnext"
+    ],
+    "allowJs": true,
+    "checkJs": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "nodenext",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitReturns": true,
+    "incremental": true,
+    "target": "ES2017"
+  },
+}
+

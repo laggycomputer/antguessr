@@ -1,0 +1,13 @@
+{
+  "name": "antguessr",
+  "version": "0.0.1",
+  "main": "back/index.js",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "laggycomputer",
+  "license": "UNLICENSED",
+  "description": ""
+}
