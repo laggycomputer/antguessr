@@ -20,7 +20,7 @@ const fetcher = Fetcher.for<paths>()
 const headers = process.env["ANTEATER_API_TOKEN"] ? { Authorization: `Bearer ${process.env["ANTEATER_API_TOKEN"]}` } : undefined
 
 fetcher.configure({
-    baseUrl: process.env.ANTEATER_API_ENDPOINT || "https://anteaterapi.com/",
+    baseUrl: process.env.ANTEATER_API_ENDPOINT || "https://anteaterapi.com",
     init: {
         headers,
     },
