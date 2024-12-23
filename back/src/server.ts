@@ -56,7 +56,7 @@ app.use("/api/privileged/*", (req, res, next) => {
         return res.status(401).send("get a session kid")
     }
 
-    const tok = (req.headers?.["authorization"] ?? "").replace("Bearer", "")
+    const tok = (req.headers?.["authorization"] ?? "").replace("Bearer ", "")
     if (!(tok in sessions)) {
         return res.status(401).send("bad session")
     }
