@@ -8,13 +8,18 @@ const __dirname = path.dirname(__filename)
 import "dotenv/config"
 import express from "express"
 import { v4 as uuidv4 } from "uuid"
+
 import { StartGameResponse } from "./types.js"
+import { courses, years } from "./course-pool.js"
+import { shuffle } from "./util.js"
 const app = express()
 
 const sessions = Object.create(null) as Record<string, {
     state: "nextQuestion" | { answering: string } | "enterName"
     score: number
 }>
+
+const offerings = shuffle(courses.map(c => years.map(y => [[...c, y] as [string, string, string], undefined])).flat())
 
 // app.use((_req, res, next) => {
 //     res.header("Access-Control-Allow-Origin", "*")
@@ -48,9 +53,18 @@ app.use("/api/privileged/*", (req, res, next) => {
         return res.status(401).send("bad session")
     }
 
-    req.headers["key"] = tok
+    req.headers["authorization"] = tok
 
     return next()
+})
+
+app.get("/api/privileged/question", (req, res) => {
+    if (sessions[req.headers["authorization"] as string].state !== "nextQuestion") {
+        return res.status(401).send("answer your question first!")
+    }
+
+    const offering = offerings.pop() as [[string, string, string], any]
+    offerings.unshift(offering)
 })
 
 const port = process.env["PORT"] || 3939

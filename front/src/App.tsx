@@ -1,6 +1,6 @@
 "use client"
 
-import { StartGameResponse } from "../../back/types"
+import { StartGameResponse } from "../../back/src/types"
 import { useEffect, useState } from "react"
 
 type Question = {
