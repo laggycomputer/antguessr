@@ -9,8 +9,9 @@ import "dotenv/config"
 import express from "express"
 import { v4 as uuidv4 } from "uuid"
 
-import { StartGameResponse } from "./types.js"
+import { graphql } from "./graphql"
 import { courses, years } from "./course-pool.js"
+import { StartGameResponse } from "./types.js"
 import { shuffle } from "./util.js"
 const app = express()
 
@@ -65,6 +66,21 @@ app.get("/api/privileged/question", (req, res) => {
 
     const offering = offerings.pop() as [[string, string, string], any]
     offerings.unshift(offering)
+    const got = graphql(`
+query Grades($query: GradesQuery) {
+  aggregateGradesByCourse(query: $query) {
+    gradeACount
+    gradeBCount
+    gradeCCount
+    gradeDCount
+    gradeFCount
+    gradePCount
+    gradeNPCount
+    gradeWCount
+    averageGPA
+  }
+}
+      `)
 })
 
 const port = process.env["PORT"] || 3939
