@@ -9,7 +9,7 @@
     "codegen": "openapi-typescript https://anteaterapi.com/openapi.json -o src/anteaterapi.d.ts",
     "dev": "tsx watch src/server.ts",
     "build": "node esbuild.js",
-    "start": "node ."
+    "start": "tsx src/server.ts"
   },
   "author": "laggycomputer",
   "license": "MIT",
@@ -26,7 +26,6 @@
   },
   "dependencies": {
     "dotenv": "^16.4.7",
-    "esbuild": "^0.21.5",
     "express": "^4.20.0",
     "express-http-proxy": "^2.1.1",
     "openapi-fetch": "^0.13.3",
