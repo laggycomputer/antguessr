@@ -64,20 +64,24 @@ export default function QuizApp() {
         return (
             <div>
                 <h1>Leaderboard</h1>
-                <table align="center">
-                    <thead>
-                        <tr>
-                            <td></td>
-                            <td align="center">Name</td>
-                            <td align="center">Score</td>
-                        </tr>
-                    </thead>
-                    {leaderboard.map(([score, name], index) => <tr>
-                        <td align="right">{index + 1}</td>
-                        <td align="center">{name}</td>
-                        <td align="center">{score}</td>
-                    </tr>)}
-                </table>
+                {
+                    leaderboard.length ? (
+                        <table align="center">
+                            <thead>
+                                <tr>
+                                    <td></td>
+                                    <td align="center">Name</td>
+                                    <td align="center">Score</td>
+                                </tr>
+                            </thead>
+                            {leaderboard.map(([score, name], index) => <tr>
+                                <td align="right">{index + 1}</td>
+                                <td align="center">{name}</td>
+                                <td align="center">{score}</td>
+                            </tr>)}
+                        </table>
+                    ) : <h2>Nothing yet!</h2>
+                }
                 <button onClick={() => setShowLeaderboard(false)}>Close</button>
             </div>
         )
