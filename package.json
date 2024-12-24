@@ -6,7 +6,8 @@
   "private": true,
   "scripts": {
     "dev": "export NODE_ENV=development; concurrently -n \"front,back\" -c magenta,blue \"cd front && npm run dev\" \"cd back && npm run dev\"",
-    "build": "npm ci && cd back && npm ci && npm run build && cd .. && cd front && npm ci && npm run build && cd .."
+    "build": "npm ci && cd back && npm ci && npm run build && cd .. && cd front && npm ci && npm run build && cd ..",
+    "start": "cd back && npm run start"
   },
   "author": "laggycomputer",
   "license": "UNLICENSED",
