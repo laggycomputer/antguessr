@@ -48,7 +48,7 @@ function transformGPA(gpa: number, correct = false) {
         ret = Math.round(ret * 10) / 10
     }
 
-    return ret
+    return Math.max(ret, 0)
 }
 
 function digitSum(n: number) {
@@ -126,8 +126,10 @@ app.get("/api/privileged/question", async (req, res) => {
 
     const buckets = [
         [0, 2],
-        [2, 3],
-        [3, 3.5],
+        [2, 2.5],
+        [2.5, 3],
+        [3, 3.25],
+        [3.25, 3.5],
         [3.5, 4],
     ] as [number, number][]
 
