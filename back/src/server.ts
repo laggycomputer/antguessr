@@ -37,8 +37,22 @@ function makeQuestionID(department: string, courseNumber: string, year: string) 
     return `${department}-${courseNumber}-${year}`
 }
 
-function transformGPA(gpa: number) {
-    return Math.round(gpa * 10) / 10
+function randRange(lower: number, upper: number) {
+    return Math.random() * (upper - lower) + lower
+}
+
+function transformGPA(gpa: number, correct = false) {
+    let ret = Math.round(gpa * 10) / 10
+    while (digitSum(ret) % 2 !== (correct ? 0 : 1)) {
+        ret -= 0.1
+        ret = Math.round(ret * 10) / 10
+    }
+
+    return ret
+}
+
+function digitSum(n: number) {
+    return Array.from(Math.abs(n).toString().replace(".", "")).map(d => parseInt(d)).reduce((a, x) => a + x, 0)
 }
 
 // app.use((_req, res, next) => {
@@ -101,7 +115,7 @@ app.get("/api/privileged/question", async (req, res) => {
             },
         }).then(r => r.data?.data[0]) as GradeData
         if (data && "averageGPA" in data) {
-            data.averageGPA = transformGPA(data.averageGPA as number)
+            data.averageGPA = transformGPA(data.averageGPA as number, true)
         }
         offering[1] = data
         offerings.unshift(offering)
@@ -110,10 +124,23 @@ app.get("/api/privileged/question", async (req, res) => {
     const questionId = makeQuestionID(data.department, data.courseNumber, (year as string).toString())
     sessions[session].state = { answering: questionId }
 
-    // TODO
+    const buckets = [
+        [0, 2],
+        [2, 3],
+        [3, 3.5],
+        [3.5, 4],
+    ] as [number, number][]
+
+    const bucket = buckets.findIndex(([lower, upper]) => lower < data.averageGPA && data.averageGPA <= upper)
+    buckets.splice(bucket, 1)
+    const options = [
+        ...buckets.map(([lower, upper]) => transformGPA(randRange(lower, upper), false)),
+        data.averageGPA,
+    ].toSorted()
+
     return res.json({
         id: questionId,
-        options: [0, 1, 2, data.averageGPA],
+        options,
         question: `${data.department} ${data.courseNumber}, ${year}`,
     } as Question)
 })
