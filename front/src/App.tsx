@@ -61,12 +61,26 @@ export default function QuizApp() {
     }
 
     if (showLeaderboard) {
-        return <div>
-            <h1>Leaderboard</h1>
+        return (
             <div>
-                {leaderboard.map(([score, name]) => <pre>{score} {name}</pre>)}
+                <h1>Leaderboard</h1>
+                <table align="center">
+                    <thead>
+                        <tr>
+                            <td></td>
+                            <td align="center">Name</td>
+                            <td align="center">Score</td>
+                        </tr>
+                    </thead>
+                    {leaderboard.map(([score, name], index) => <tr>
+                        <td align="right">{index + 1}</td>
+                        <td align="center">{name}</td>
+                        <td align="center">{score}</td>
+                    </tr>)}
+                </table>
+                <button onClick={() => setShowLeaderboard(false)}>Close</button>
             </div>
-        </div>
+        )
     }
 
     return (
