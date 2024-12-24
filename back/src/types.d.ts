@@ -16,3 +16,7 @@ export type AnswerResponse = {
     correct: true
     score: number
 }
+
+export type EnterNameReponse = {
+    ranking?: number
+}

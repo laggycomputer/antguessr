@@ -31,6 +31,9 @@ type GradeData = paths["/v2/rest/grades/aggregateByCourse"]["get"]["responses"][
 type SavedOffering = [[string, string, string], GradeData | undefined]
 const offerings = shuffle(courses.map(c => years.map(y => [[...c, y], undefined] as SavedOffering)).flat())
 
+type HighScore = [score: number, name: string]
+let highScores = [] as HighScore[]
+
 function makeQuestionID(department: string, courseNumber: string, year: string) {
     return `${department}-${courseNumber}-${year}`
 }
@@ -125,8 +128,6 @@ app.post("/api/privileged/answer", (req, res) => {
     const question = offerings.find(([[dept, courseNum, year]]) =>
         makeQuestionID(dept, courseNum, year.toString()) == (sessions[session]?.state as { answering: string }).answering) as SavedOffering
     const correct = question[1]?.averageGPA?.toString() == req.body?.answer
-    console.log(question[1]?.averageGPA?.toString())
-    console.log(req.body)
     if (correct) {
         sessions[session].score += 1
         sessions[session].state = "nextQuestion"
@@ -141,6 +142,27 @@ app.post("/api/privileged/answer", (req, res) => {
             actual: question[1]?.averageGPA,
             score: sessions[session].score,
         } as AnswerResponse)
+    }
+})
+
+app.post("/api/privileged/save-score", (req, res) => {
+    const session = req.headers["authorization"] as string
+    if (sessions[session]?.state !== "enterName") {
+        return res.status(401).send("game isn't over! keep playing!")
+    }
+
+    const score = Math.floor(sessions[session]?.score ?? 0)
+    delete sessions[session]
+    const name = (req.body?.name || "").toString().trim()
+
+    if (score > 0 && name) {
+        // if tied, last among those with the same score
+        const tentative = highScores.findLastIndex(([lbScore]) => lbScore >= score)
+        const insertAfter = tentative != -1 ? tentative : highScores.length - 1
+        highScores = [...highScores.slice(undefined, insertAfter + 1), [score, name], ...highScores.slice(insertAfter + 1)]
+        return res.status(200).json({ ranking: insertAfter + 1 + 1 })
+    } else {
+        return res.status(200).json({})
     }
 })
 
