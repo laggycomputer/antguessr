@@ -133,10 +133,10 @@ app.get("/api/privileged/question", async (req, res) => {
 
     const bucket = buckets.findIndex(([lower, upper]) => lower < data.averageGPA && data.averageGPA <= upper)
     buckets.splice(bucket, 1)
-    const options = [
+    const options = Array.from(new Set([
         ...buckets.map(([lower, upper]) => transformGPA(randRange(lower, upper), false)),
         data.averageGPA,
-    ].toSorted()
+    ].toSorted()))
 
     return res.json({
         id: questionId,
