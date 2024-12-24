@@ -20,3 +20,5 @@ export type AnswerResponse = {
 export type EnterNameReponse = {
     ranking?: number
 }
+
+export type HighScore = [score: number, name: string]

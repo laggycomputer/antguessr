@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from "uuid"
 
 import type { paths } from "./anteaterapi"
 import { courses, years } from "./course-pool"
-import { AnswerResponse, Question, StartGameResponse } from "./types"
+import { AnswerResponse, HighScore, Question, StartGameResponse } from "./types"
 import { shuffle } from "./util"
 const app = express()
 
@@ -31,7 +31,6 @@ type GradeData = paths["/v2/rest/grades/aggregateByCourse"]["get"]["responses"][
 type SavedOffering = [[string, string, string], GradeData | undefined]
 const offerings = shuffle(courses.map(c => years.map(y => [[...c, y], undefined] as SavedOffering)).flat())
 
-type HighScore = [score: number, name: string]
 let highScores = [] as HighScore[]
 
 function makeQuestionID(department: string, courseNumber: string, year: string) {
@@ -165,6 +164,8 @@ app.post("/api/privileged/save-score", (req, res) => {
         return res.status(200).json({})
     }
 })
+
+app.get("/api/leaderboard", (_req, res) => res.json(highScores))
 
 const port = process.env["PORT"] || 3939
 app.listen(port, async () => {

@@ -1,7 +1,7 @@
 "use client"
 
 import { FormEvent, useEffect, useState } from "react"
-import { AnswerResponse, EnterNameReponse, Question, StartGameResponse } from "../../back/src/types"
+import { AnswerResponse, EnterNameReponse, HighScore, Question, StartGameResponse } from "../../back/src/types"
 
 export default function QuizApp() {
     const [session, setSession] = useState<string | undefined>()
@@ -9,6 +9,8 @@ export default function QuizApp() {
     const [score, setScore] = useState(0)
     const [gameOver, setGameOver] = useState(false)
     const [name, setName] = useState<string>("")
+    const [leaderboard, setLeaderboard] = useState<HighScore[]>([])
+    const [showLeaderboard, setShowLeaderboard] = useState<boolean>(false)
 
     const getNextQuestion = async (session: string) => {
         const data = (await fetch("/api/privileged/question", { headers: { "Authorization": `Bearer ${session}` } }).then(r => r.json())) as Question
@@ -58,6 +60,15 @@ export default function QuizApp() {
         return <div>Loading...</div>
     }
 
+    if (showLeaderboard) {
+        return <div>
+            <h1>Leaderboard</h1>
+            <div>
+                {leaderboard.map(([score, name]) => <pre>{score} {name}</pre>)}
+            </div>
+        </div>
+    }
+
     return (
         <div>
             <h1>Quiz App</h1>
@@ -82,6 +93,12 @@ export default function QuizApp() {
                             </button>
                         ))}
                     </div>
+                    <br />
+                    <button onClick={async () => {
+                        const leaderboard = (await fetch("/api/leaderboard").then(r => r.json())) as HighScore[]
+                        setLeaderboard(leaderboard)
+                        setShowLeaderboard(true)
+                    }}>Leaderboard</button>
                 </div>
             )}
         </div>
