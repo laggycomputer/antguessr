@@ -69,7 +69,7 @@ app.get("/api/hi", (_req, res) => {
 
 app.use(express.json())
 // idiotic hackathon decision
-app.use("/", express.static(path.join(__dirname, "front", "dist")))
+app.use("/", express.static(path.join(__dirname, "..", "..", "front", "dist")))
 
 app.post("/api/start-game", (_req, res) => {
     const sessId = uuidv4()
