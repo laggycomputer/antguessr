@@ -21,4 +21,4 @@ export type EnterNameReponse = {
     ranking?: number
 }
 
-export type HighScore = [score: number, name: string]
+export type HighScore = { score: number, name: string }
