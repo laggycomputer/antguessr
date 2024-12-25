@@ -188,7 +188,8 @@ app.post("/api/privileged/save-score", (req, res) => {
         // if tied, last among those with the same score
         const tentative = highScores.findLastIndex(([lbScore]) => lbScore >= score)
         const insertAfter = tentative != -1 ? tentative : highScores.length - 1
-        highScores = [...highScores.slice(undefined, insertAfter + 1), [score, name], ...highScores.slice(insertAfter + 1)]
+        highScores = [...highScores.slice(undefined, insertAfter + 1), [score, name] as HighScore, ...highScores.slice(insertAfter + 1)]
+            .slice(0, 50)
         return res.status(200).json({ ranking: insertAfter + 1 + 1 })
     } else {
         return res.status(200).json({})
