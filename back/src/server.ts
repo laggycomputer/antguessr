@@ -31,6 +31,14 @@ const leaderboardModel = mongoose.model("leaderboard", new Schema({
     }],
 }), "antguessr")
 
+if (await leaderboardModel.findOne({}) == null) {
+    await leaderboardModel.insertMany([
+        {
+            leaderboard: [],
+        },
+    ])
+}
+
 const sessions = Object.create(null) as Record<string, {
     state: "nextQuestion" | { answering: string } | "enterName"
     score: number
