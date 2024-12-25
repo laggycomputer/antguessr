@@ -10,7 +10,7 @@ import express from "express"
 import createClient from "openapi-fetch"
 import { v4 as uuidv4 } from "uuid"
 
-import mongoose from "mongoose"
+import mongoose, { Schema } from "mongoose"
 import type { paths } from "./anteaterapi"
 import { courses, years } from "./course-pool"
 import { AnswerResponse, HighScore, Question, StartGameResponse } from "./types"
@@ -24,6 +24,12 @@ const client = createClient<paths>({
 })
 
 await mongoose.connect(process.env.MONGO_URI || "mongodb://127.0.0.1/antguessr")
+const leaderboardModel = mongoose.model("leaderboard", new Schema({
+    leaderboard: [{
+        name: String,
+        score: Number,
+    }],
+}), "antguessr")
 
 const sessions = Object.create(null) as Record<string, {
     state: "nextQuestion" | { answering: string } | "enterName"
