@@ -182,7 +182,7 @@ app.post("/api/privileged/save-score", (req, res) => {
 
     const score = Math.floor(sessions[session]?.score ?? 0)
     delete sessions[session]
-    const name = (req.body?.name || "").toString().trim()
+    const name = (req.body?.name || "").toString().trim() as string
 
     if (score > 0 && name) {
         // if tied, last among those with the same score
