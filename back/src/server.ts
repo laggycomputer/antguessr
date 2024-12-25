@@ -213,6 +213,7 @@ app.post("/api/privileged/save-score", async (req, res) => {
                 },
             },
         })
+        await leaderboardModel.updateOne({}, { $set: { leaderboard: { $slice: [50] } } })
 
         return res.status(200).json({ ranking: insertAfter + 1 + 1 })
     } else {
