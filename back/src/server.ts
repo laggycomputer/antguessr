@@ -48,8 +48,6 @@ type GradeData = paths["/v2/rest/grades/aggregateByCourse"]["get"]["responses"][
 type SavedOffering = [[string, string, string], GradeData | undefined]
 const offerings = shuffle(courses.map(c => years.map(y => [[...c, y], undefined] as SavedOffering)).flat())
 
-let highScores = [] as HighScore[]
-
 function makeQuestionID(department: string, courseNumber: string, year: string) {
     return `${department}-${courseNumber}-${year}`
 }
