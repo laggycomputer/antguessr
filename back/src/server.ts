@@ -189,7 +189,7 @@ app.post("/api/privileged/answer", (req, res) => {
     }
 })
 
-app.post("/api/privileged/save-score", (req, res) => {
+app.post("/api/privileged/save-score", async (req, res) => {
     const session = req.headers["authorization"] as string
     if (sessions[session]?.state !== "enterName") {
         return res.status(401).send("game isn't over! keep playing!")
@@ -200,11 +200,20 @@ app.post("/api/privileged/save-score", (req, res) => {
     const name = (req.body?.name || "").toString().trim() as string
 
     if (score > 0 && name) {
+        const highScores = (await leaderboardModel.findOne({}))!
+
         // if tied, last among those with the same score
-        const tentative = highScores.findLastIndex(([lbScore]) => lbScore >= score)
-        const insertAfter = tentative != -1 ? tentative : highScores.length - 1
-        highScores = [...highScores.slice(undefined, insertAfter + 1), [score, name] as HighScore, ...highScores.slice(insertAfter + 1)]
-            .slice(0, 50)
+        const tentative = highScores.leaderboard.findLastIndex(({ score: lbScore }) => lbScore! >= score)
+        const insertAfter = tentative != -1 ? tentative : highScores.leaderboard.length - 1
+        await leaderboardModel.updateOne({}, {
+            $push: {
+                leaderboard: {
+                    $each: [{ name, score }],
+                    $position: insertAfter + 1,
+                },
+            },
+        })
+
         return res.status(200).json({ ranking: insertAfter + 1 + 1 })
     } else {
         return res.status(200).json({})
