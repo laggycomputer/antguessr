@@ -211,7 +211,7 @@ app.post("/api/privileged/save-score", (req, res) => {
     }
 })
 
-app.get("/api/leaderboard", (_req, res) => res.json(highScores))
+app.get("/api/leaderboard", async (_req, res) => res.json(await leaderboardModel.findOne({})))
 
 const port = process.env["PORT"] || 3939
 app.listen(port, async () => {
