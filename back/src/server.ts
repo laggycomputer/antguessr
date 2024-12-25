@@ -13,7 +13,7 @@ import { v4 as uuidv4 } from "uuid"
 import mongoose, { Schema } from "mongoose"
 import type { paths } from "./anteaterapi"
 import { courses, years } from "./course-pool"
-import { AnswerResponse, HighScore, Question, StartGameResponse } from "./types"
+import { AnswerResponse, Question, StartGameResponse } from "./types"
 import { shuffle } from "./util"
 const app = express()
 
