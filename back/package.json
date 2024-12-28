@@ -6,7 +6,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "codegen": "openapi-typescript https://anteaterapi.com/openapi.json -o src/anteaterapi.d.ts",
+    "postinstall": "openapi-typescript https://anteaterapi.com/openapi.json -o src/anteaterapi.d.ts",
     "dev": "tsx watch src/server.ts",
     "build": "",
     "start": "tsx src/server.ts"
