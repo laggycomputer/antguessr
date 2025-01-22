@@ -117,6 +117,7 @@ app.post("/api/privileged/save-score", async (req, res) => {
         else highScores.leaderboard.splice(insertAt, 0, { name, score })
 
         await leaderboardModel.updateOne({}, { $set: { leaderboard: highScores.leaderboard.slice(0, 50) } })
+        return res.status(200).json({ ranking: insertAt + 1 + 1 })
     } else {
         return res.status(200).json({})
     }
