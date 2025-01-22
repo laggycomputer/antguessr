@@ -4,10 +4,24 @@ import "dotenv/config"
 import express from "express"
 import { v4 as uuidv4 } from "uuid"
 
+import mongoose, { Schema } from "mongoose"
 import { AnswerResponse, HighScore, Question, SavedOffering, StartGameResponse } from "./types"
 import { createOptionsFromGPA, makeQuestionID } from "./util"
 import { getNextOfferingGPA, getRandomizedOfferings } from "./course"
 const app = express()
+
+await mongoose.connect(process.env.MONGO_URI || "mongodb://127.0.0.1/antguessr")
+const leaderboardModel = mongoose.model("antguessr", new Schema({
+    leaderboard: [{
+        name: String,
+        score: Number,
+    }],
+}), "antguessr")
+
+if (await leaderboardModel.findOne({}) == null) {
+    const emptyEntry = { leaderboard: [] }
+    await leaderboardModel.insertMany([emptyEntry])
+}
 
 interface QuizSession {
     state: "nextQuestion" | { answering: string } | "enterName"
