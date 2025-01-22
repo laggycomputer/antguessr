@@ -18,5 +18,8 @@
     "concurrently": "^9.1.0",
     "openapi-typescript": "^7.4.4",
     "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": "^22"
   }
 }
