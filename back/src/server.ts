@@ -179,15 +179,9 @@ app.post("/api/privileged/save-score", async (req, res) => {
         // if tied, last among those with the same score
         const tentative = highScores.leaderboard.findLastIndex(({ score: lbScore }) => lbScore! >= score)
         const insertAfter = tentative != -1 ? tentative : highScores.leaderboard.length - 1
-        await leaderboardModel.updateOne({}, {
-            $push: {
-                leaderboard: {
-                    $each: [{ name, score }],
-                    $position: insertAfter + 1,
-                },
-            },
-        })
-        await leaderboardModel.updateOne({}, [{ $set: { leaderboard: { $slice: ['$leaderboard', 50] } } }])
+
+        highScores.leaderboard.splice(insertAfter, 0, { name, score })
+        await leaderboardModel.updateOne({}, { $set: { leaderboard: highScores.leaderboard.slice(0, 50) } })
 
         return res.status(200).json({ ranking: insertAfter + 1 + 1 })
     } else {
