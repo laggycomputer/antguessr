@@ -31,8 +31,6 @@ interface QuizSession {
 const sessions: Record<string, QuizSession> = {}
 const offerings = getRandomizedOfferings()
 
-const highScores: HighScore[] = []
-
 app.use(express.json())
 
 // serve frontend's build folder in prod env (not idiotic hackathon decision)
@@ -112,20 +110,21 @@ app.post("/api/privileged/save-score", async (req, res) => {
     const name = (req.body?.name || "").toString().trim() as string
 
     if (score > 0 && name) {
-        const insertAt = highScores.findIndex(({ score: lbScore }) => lbScore! < score)
-        if (insertAt === -1) highScores.push({ name, score })
-        else highScores.splice(insertAt, 0, { name, score })
+        const highScores = (await leaderboardModel.findOne({}))!
 
-        highScores.splice(50)
+        const insertAt = highScores.leaderboard.findIndex(({ score: lbScore }) => lbScore! < score)
+        if (insertAt === -1) highScores.leaderboard.push({ name, score })
+        else highScores.leaderboard.splice(insertAt, 0, { name, score })
 
-        return res.status(200).json({ ranking: insertAt + 1 + 1 })
+        await leaderboardModel.updateOne({}, { $set: { leaderboard: highScores.leaderboard.slice(0, 50) } })
     } else {
         return res.status(200).json({})
     }
 })
 
 app.get("/api/leaderboard", async (_req, res) => {
-    res.json(highScores)
+    const data = await leaderboardModel.findOne({})
+    res.json(data?.leaderboard)
 })
 
 const port = process.env.PORT || 3939
