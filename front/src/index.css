@@ -104,6 +104,11 @@ input[name="ag_name"] {
     transition: border-color 0.25s;
     margin-right: 8px;
 }
+@media (prefers-color-scheme: light) {
+    input[name="ag_name"] {
+        background-color: #f9f9f9;
+    }
+}
 input[name="ag_name"]:focus {
     border-color: #646cff;
     outline: none;
