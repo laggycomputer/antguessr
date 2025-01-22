@@ -65,7 +65,7 @@ export default function QuizApp() {
                                     <td align="center">Score</td>
                                 </tr>
                             </thead>
-                            {leaderboard.map(({ score, name }, index) => <tr>
+                            {leaderboard.map(({ score, name }, index) => <tr key={index}>
                                 <td align="right">{index + 1}</td>
                                 <td align="center">{name}</td>
                                 <td align="center">{score}</td>

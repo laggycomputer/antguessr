@@ -24,7 +24,7 @@ const client = createClient<paths>({
 })
 
 await mongoose.connect(process.env.MONGO_URI || "mongodb://127.0.0.1/antguessr")
-const leaderboardModel = mongoose.model("leaderboard", new Schema({
+const leaderboardModel = mongoose.model("antguessr", new Schema({
     leaderboard: [{
         name: String,
         score: Number,
@@ -32,17 +32,16 @@ const leaderboardModel = mongoose.model("leaderboard", new Schema({
 }), "antguessr")
 
 if (await leaderboardModel.findOne({}) == null) {
-    await leaderboardModel.insertMany([
-        {
-            leaderboard: [],
-        },
-    ])
+    const emptyEntry = { leaderboard: [] }
+    await leaderboardModel.insertMany([emptyEntry])
 }
 
-const sessions = Object.create(null) as Record<string, {
+interface QuizSession {
     state: "nextQuestion" | { answering: string } | "enterName"
     score: number
-}>
+}
+
+const sessions: Record<string, QuizSession> = {}
 
 type GradeData = paths["/v2/rest/grades/aggregateByCourse"]["get"]["responses"]["200"]["content"]["application/json"]["data"][0]
 type SavedOffering = [[string, string, string], GradeData | undefined]
@@ -84,7 +83,7 @@ app.get("/api/hi", (_req, res) => {
 
 app.use(express.json())
 // idiotic hackathon decision
-app.use("/", express.static(path.join(__dirname, "..", "..", "front", "dist")))
+app.use("/", express.static("../../front/dist"))
 
 app.post("/api/start-game", (_req, res) => {
     const sessId = uuidv4()
@@ -213,7 +212,7 @@ app.post("/api/privileged/save-score", async (req, res) => {
                 },
             },
         })
-        await leaderboardModel.updateOne({}, { $set: { leaderboard: { $slice: [50] } } })
+        await leaderboardModel.updateOne({}, [{ $set: { leaderboard: { $slice: ['$leaderboard', 50] } } }])
 
         return res.status(200).json({ ranking: insertAfter + 1 + 1 })
     } else {
@@ -221,7 +220,7 @@ app.post("/api/privileged/save-score", async (req, res) => {
     }
 })
 
-app.get("/api/leaderboard", async (_req, res) => res.json(await leaderboardModel.findOne({})))
+app.get("/api/leaderboard", async (_req, res) => res.json(await leaderboardModel.findOne({}).lean().then(x => x?.leaderboard)))
 
 const port = process.env["PORT"] || 3939
 app.listen(port, async () => {
