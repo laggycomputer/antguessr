@@ -82,7 +82,41 @@ td {
 
 /* End default styles */
 
+#root > div {
+    width: 480px;
+}
+
 .answer-options {
     display: flex;
     gap: 8px;
+}
+
+input[name="ag_name"] {
+    background-color: #1a1a1a;
+    box-sizing: border-box;
+    border-radius: 8px;
+    border: 1px solid #8886;
+    padding: 8px 12px;
+    height: 40px;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    transition: border-color 0.25s;
+    margin-right: 8px;
+}
+input[name="ag_name"]:focus {
+    border-color: #646cff;
+    outline: none;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+table td {
+    border: 1px solid #8884;
+    padding: 6px 12px;
+}
+table td:nth-child(2) {
+    min-width: 100%;
 }

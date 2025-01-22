@@ -4,6 +4,43 @@ import { FormEvent, useEffect, useState } from "react"
 import { HighScore, Question } from "../../back/src/types"
 import { checkAnswer, fetchQuestion, recordScore, startSession } from "./lib/helpers"
 
+interface GameOverFormProps {
+    resetQuiz: (evt: FormEvent) => Promise<void>;
+    score: number;
+    name: string;
+    setName: React.Dispatch<string>;
+}
+function GameOverForm({ resetQuiz, score, name, setName }: GameOverFormProps) {
+    return <form onSubmit={resetQuiz}>
+        <h2>Game over! Your score: {score}</h2>
+        <input type="text" placeholder="Enter your name" value={name} onChange={e => setName(e.target.value)} name="ag_name"></input>
+        <button>Retry</button>
+    </form>
+}
+
+function LeaderboardTable({ leaderboard }: { leaderboard: HighScore[] })  {
+    if (!leaderboard.length) return <h2>Nothing yet!</h2>
+
+    const leaderboardRows = leaderboard.map(({ score, name }, index) =>
+        <tr key={index}>
+            <td align="center">{index + 1}</td>
+            <td>{name}</td>
+            <td align="center">{score}</td>
+        </tr>
+    )
+
+    return <table align="center">
+        <thead><tr>
+            <td>🏆</td>
+            <td>Name</td>
+            <td align="center">Score</td>
+        </tr></thead>
+        <tbody>
+            {leaderboardRows}
+        </tbody>
+    </table>
+}
+
 export default function QuizApp() {
     const [session, setSession] = useState<string | undefined>()
     const [currentQuestion, setCurrentQuestion] = useState<Question | undefined>()
@@ -49,69 +86,47 @@ export default function QuizApp() {
         getNextQuestion(id)
     }
 
-    if (currentQuestion === undefined) return <div>Loading...</div>
-
-    if (showLeaderboard) {
-        return (
-            <div>
-                <h1>Leaderboard</h1>
-                {
-                    leaderboard.length ? (
-                        <table align="center">
-                            <thead>
-                                <tr>
-                                    <td></td>
-                                    <td align="center">Name</td>
-                                    <td align="center">Score</td>
-                                </tr>
-                            </thead>
-                            {leaderboard.map(({ score, name }, index) => <tr key={index}>
-                                <td align="right">{index + 1}</td>
-                                <td align="center">{name}</td>
-                                <td align="center">{score}</td>
-                            </tr>)}
-                        </table>
-                    ) : <h2>Nothing yet!</h2>
-                }
-                <button onClick={() => setShowLeaderboard(false)}>Close</button>
-            </div>
-        )
+    async function openLeaderboard () {
+        const leaderboard = (await fetch("/api/leaderboard").then(r => r.json())) as HighScore[]
+        setLeaderboard(leaderboard)
+        setShowLeaderboard(true)
     }
 
-    return (
-        <div>
-            <h2>Anteater GPA Guesser</h2>
-            {gameOver ? (
-                <div>
-                    <form onSubmit={resetQuiz}>
-                        <h2>Game over! Your score: {score}</h2>
-                        <input type="text" placeholder="Enter your name" value={name} onChange={e => setName(e.target.value)} name="ag_name"></input>
-                        <button>Retry</button>
-                    </form>
-                </div>
-            ) : (
-                <div>
-                    <h2>Your score: {score}</h2>
-                    <hr />
-                    <h3>{currentQuestion.question}</h3>
-                    <div className="answer-options">
-                        {currentQuestion.options.map((option, index) => (
-                            <button
-                                key={index}
-                                disabled={disableAnswering}
-                                onClick={() => handleAnswer(option)}>
-                                {option}
-                            </button>
-                        ))}
-                    </div>
-                    <br />
-                    <button onClick={async () => {
-                        const leaderboard = (await fetch("/api/leaderboard").then(r => r.json())) as HighScore[]
-                        setLeaderboard(leaderboard)
-                        setShowLeaderboard(true)
-                    }}>Leaderboard</button>
-                </div>
-            )}
+    if (currentQuestion === undefined) return <div style={{ textAlign: 'center' }}>Loading...</div>
+
+    if (showLeaderboard) {
+        return <div>
+            <h2>Leaderboard</h2>
+            <LeaderboardTable leaderboard={leaderboard}/>
+            <br />
+            <button onClick={() => setShowLeaderboard(false)}>Close</button>
         </div>
-    )
+    }
+
+    const title = <h2>Anteater GPA Guesser</h2>
+    if (gameOver) {
+        const formProps = { resetQuiz, name, score, setName }
+        return <div>{title}<hr/><GameOverForm {...formProps}/></div>
+    }
+
+    return <div>
+        {title}
+        <h2>Your score: {score}</h2>
+        <hr />
+
+        <h3>{currentQuestion.question}</h3>
+        <div className="answer-options">
+            {currentQuestion.options.map((option, index) => (
+                <button
+                    key={index}
+                    disabled={disableAnswering}
+                    onClick={() => handleAnswer(option)}>
+                    {option}
+                </button>
+            ))}
+        </div>
+        <br />
+
+        <button onClick={openLeaderboard}>Leaderboard</button>
+    </div>
 }
