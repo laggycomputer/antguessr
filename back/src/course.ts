@@ -1,6 +1,6 @@
-import { courses, years } from "./course-pool";
-import { GradeData, SavedOffering } from "./types";
-import { openAPIClient, shuffle, transformGPA } from "./util";
+import { courses, years } from "./course-pool"
+import { GradeData, SavedOffering } from "./types"
+import { openAPIClient, shuffle, transformGPA } from "./util"
 
 export function getRandomizedOfferings() {
     // offerings: [[["STATS", "67", 2022], undefined], [["STATS", "67", 2023], undefined], ...]
@@ -32,4 +32,3 @@ export async function getNextOfferingGPA(offerings: SavedOffering[]) {
     }
     return { data, year }
 }
-
