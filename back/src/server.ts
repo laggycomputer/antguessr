@@ -58,7 +58,7 @@ app.get("/api/hi", (_req, res) => {
 app.use(express.json())
 
 // serve frontend's build folder in prod env (not idiotic hackathon decision)
-app.use("/", express.static("../../front/dist"))
+app.use("/", express.static("../front/dist"))
 
 app.post("/api/start-game", (_req, res) => {
     const sessId = uuidv4()
