@@ -1,9 +1,4 @@
-import path from "node:path"
 import process from "node:process"
-import { fileURLToPath } from "node:url"
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 
 import "dotenv/config"
 import express from "express"
@@ -17,7 +12,7 @@ import { AnswerResponse, Question, StartGameResponse } from "./types"
 import { makeQuestionID, randRange, shuffle, transformGPA } from "./util"
 const app = express()
 
-const headers = process.env["ANTEATER_API_TOKEN"] ? { Authorization: `Bearer ${process.env["ANTEATER_API_TOKEN"]}` } : undefined
+const headers = process.env.ANTEATER_API_TOKEN ? { Authorization: `Bearer ${process.env.ANTEATER_API_TOKEN}` } : undefined
 const client = createClient<paths>({
     baseUrl: process.env.ANTEATER_API_ENDPOINT || "https://anteaterapi.com",
     headers,
@@ -205,7 +200,7 @@ app.get("/api/leaderboard", async (_req, res) => {
     res.json(data?.leaderboard)
 })
 
-const port = process.env["PORT"] || 3939
+const port = process.env.PORT || 3939
 app.listen(port, async () => {
     console.log(`Ready at port ${port}`)
 })
