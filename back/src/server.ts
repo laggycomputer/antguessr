@@ -14,7 +14,7 @@ import mongoose, { Schema } from "mongoose"
 import type { paths } from "./anteaterapi"
 import { courses, years } from "./course-pool"
 import { AnswerResponse, Question, StartGameResponse } from "./types"
-import { shuffle } from "./util"
+import { makeQuestionID, randRange, shuffle, transformGPA } from "./util"
 const app = express()
 
 const headers = process.env["ANTEATER_API_TOKEN"] ? { Authorization: `Bearer ${process.env["ANTEATER_API_TOKEN"]}` } : undefined
@@ -47,27 +47,6 @@ type GradeData = paths["/v2/rest/grades/aggregateByCourse"]["get"]["responses"][
 type SavedOffering = [[string, string, string], GradeData | undefined]
 const offerings = shuffle(courses.map(c => years.map(y => [[...c, y], undefined] as SavedOffering)).flat())
 
-function makeQuestionID(department: string, courseNumber: string, year: string) {
-    return `${department}-${courseNumber}-${year}`
-}
-
-function randRange(lower: number, upper: number) {
-    return Math.random() * (upper - lower) + lower
-}
-
-function transformGPA(gpa: number, correct = false) {
-    let ret = Math.round(gpa * 10) / 10
-    while (digitSum(ret) % 2 !== (correct ? 0 : 1)) {
-        ret -= 0.1
-        ret = Math.round(ret * 10) / 10
-    }
-
-    return Math.max(ret, 0)
-}
-
-function digitSum(n: number) {
-    return Array.from(Math.abs(n).toString().replace(".", "")).map(d => parseInt(d)).reduce((a, x) => a + x, 0)
-}
 
 // app.use((_req, res, next) => {
 //     res.header("Access-Control-Allow-Origin", "*")
@@ -82,7 +61,8 @@ app.get("/api/hi", (_req, res) => {
 })
 
 app.use(express.json())
-// idiotic hackathon decision
+
+// serve frontend's build folder in prod env (not idiotic hackathon decision)
 app.use("/", express.static("../../front/dist"))
 
 app.post("/api/start-game", (_req, res) => {
@@ -220,7 +200,10 @@ app.post("/api/privileged/save-score", async (req, res) => {
     }
 })
 
-app.get("/api/leaderboard", async (_req, res) => res.json(await leaderboardModel.findOne({}).lean().then(x => x?.leaderboard)))
+app.get("/api/leaderboard", async (_req, res) => {
+    const data = await leaderboardModel.findOne({})
+    res.json(data?.leaderboard)
+})
 
 const port = process.env["PORT"] || 3939
 app.listen(port, async () => {

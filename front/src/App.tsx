@@ -13,18 +13,18 @@ export default function QuizApp() {
     const [leaderboard, setLeaderboard] = useState<HighScore[]>([])
     const [showLeaderboard, setShowLeaderboard] = useState<boolean>(false)
     const [disableAnswering, setDisableAnswering] = useState(false)
-
-    const getNextQuestion = async (session: string) => {
-        setCurrentQuestion(await fetchQuestion(session))
-        setDisableAnswering(false)
-    }
-
+    
     useEffect(() => {
         startSession().then(({ id }) => {
             setSession(id)
             getNextQuestion(id)
         })
     }, [])
+
+    const getNextQuestion = async (session: string) => {
+        setCurrentQuestion(await fetchQuestion(session))
+        setDisableAnswering(false)
+    }
 
     const handleAnswer = async (answer: number) => {
         setDisableAnswering(true)
@@ -38,7 +38,7 @@ export default function QuizApp() {
     async function resetQuiz(evt: FormEvent) {
         evt.preventDefault();
         const formData = new FormData(evt.target as HTMLFormElement);
-        const name = formData.get("name") as string // formData can be a blob if it's a file input, but that's not the case here
+        const name = formData.get("ag_name") as string // formData can be a blob if it's a file input, but that's not the case here
         await recordScore(session!, name)
 
         const { id } = await startSession()
@@ -85,7 +85,7 @@ export default function QuizApp() {
                 <div>
                     <form onSubmit={resetQuiz}>
                         <h2>Game over! Your score: {score}</h2>
-                        <input type="text" placeholder="Enter your name" value={name} onChange={e => setName(e.target.value)} name="name"></input>
+                        <input type="text" placeholder="Enter your name" value={name} onChange={e => setName(e.target.value)} name="ag_name"></input>
                         <button>Retry</button>
                     </form>
                 </div>
