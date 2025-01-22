@@ -1,7 +1,8 @@
 "use client"
 
 import { FormEvent, useEffect, useState } from "react"
-import { AnswerResponse, EnterNameReponse, HighScore, Question, StartGameResponse } from "../../back/src/types"
+import { HighScore, Question } from "../../back/src/types"
+import { checkAnswer, fetchQuestion, recordScore, startSession } from "./lib/helpers"
 
 export default function QuizApp() {
     const [session, setSession] = useState<string | undefined>()
@@ -11,54 +12,44 @@ export default function QuizApp() {
     const [name, setName] = useState<string>("")
     const [leaderboard, setLeaderboard] = useState<HighScore[]>([])
     const [showLeaderboard, setShowLeaderboard] = useState<boolean>(false)
+    const [disableAnswering, setDisableAnswering] = useState(false)
 
     const getNextQuestion = async (session: string) => {
-        const data = (await fetch("/api/privileged/question", { headers: { "Authorization": `Bearer ${session}` } }).then(r => r.json())) as Question
-        setCurrentQuestion(data)
+        setCurrentQuestion(await fetchQuestion(session))
+        setDisableAnswering(false)
     }
 
     useEffect(() => {
-        (async () => {
-            const { id } = (await fetch("/api/start-game", { method: "POST" }).then(r => r.json()) as StartGameResponse)
+        startSession().then(({ id }) => {
             setSession(id)
-            await getNextQuestion(id)
-        })()
+            getNextQuestion(id)
+        })
     }, [])
 
     const handleAnswer = async (answer: number) => {
-        const { correct } = (await fetch("/api/privileged/answer", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session}` },
-            body: JSON.stringify({ answer }),
-        }).then(r => r.json()) as AnswerResponse)
+        setDisableAnswering(true)
+        const { correct } = await checkAnswer(session!, answer)
+        if (!correct) return setGameOver(true)
 
-        if (correct) {
-            setScore(score + 1)
-            await getNextQuestion(session as string)
-        } else {
-            setGameOver(true)
-        }
+        setScore(score + 1)
+        await getNextQuestion(session as string)
     }
 
     async function resetQuiz(evt: FormEvent) {
         evt.preventDefault();
         const formData = new FormData(evt.target as HTMLFormElement);
-        await fetch("/api/privileged/save-score", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session}` },
-            body: JSON.stringify({ name: formData.get("name") })
-        }).then(r => r.json()) as EnterNameReponse
+        const name = formData.get("name") as string // formData can be a blob if it's a file input, but that's not the case here
+        await recordScore(session!, name)
 
-        const { id } = (await fetch("/api/start-game", { method: "POST" }).then(r => r.json()) as StartGameResponse)
+        const { id } = await startSession()
         setSession(id)
-        getNextQuestion(id)
         setScore(0)
         setGameOver(false)
+        setCurrentQuestion(undefined)
+        getNextQuestion(id)
     }
 
-    if (currentQuestion === undefined) {
-        return <div>Loading...</div>
-    }
+    if (currentQuestion === undefined) return <div>Loading...</div>
 
     if (showLeaderboard) {
         return (
@@ -74,7 +65,7 @@ export default function QuizApp() {
                                     <td align="center">Score</td>
                                 </tr>
                             </thead>
-                            {leaderboard.map(([score, name], index) => <tr>
+                            {leaderboard.map(({ score, name }, index) => <tr>
                                 <td align="right">{index + 1}</td>
                                 <td align="center">{name}</td>
                                 <td align="center">{score}</td>
@@ -101,11 +92,13 @@ export default function QuizApp() {
             ) : (
                 <div>
                     <h2>Your score: {score}</h2>
+                    <hr />
                     <h3>{currentQuestion.question}</h3>
-                    <div>
+                    <div className="answer-options">
                         {currentQuestion.options.map((option, index) => (
                             <button
                                 key={index}
+                                disabled={disableAnswering}
                                 onClick={() => handleAnswer(option)}>
                                 {option}
                             </button>

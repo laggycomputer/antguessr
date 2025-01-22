@@ -1,3 +1,5 @@
+/* Vite Default Styles */
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -76,4 +78,11 @@ td {
   button {
     background-color: #f9f9f9;
   }
+}
+
+/* End default styles */
+
+.answer-options {
+    display: flex;
+    gap: 8px;
 }
