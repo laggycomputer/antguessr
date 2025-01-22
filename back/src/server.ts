@@ -4,24 +4,10 @@ import "dotenv/config"
 import express from "express"
 import { v4 as uuidv4 } from "uuid"
 
-import mongoose, { Schema } from "mongoose"
-import { AnswerResponse, Question, SavedOffering, StartGameResponse } from "./types"
+import { AnswerResponse, HighScore, Question, SavedOffering, StartGameResponse } from "./types"
 import { createOptionsFromGPA, makeQuestionID } from "./util"
 import { getNextOfferingGPA, getRandomizedOfferings } from "./course"
 const app = express()
-
-await mongoose.connect(process.env.MONGO_URI || "mongodb://127.0.0.1/antguessr")
-const leaderboardModel = mongoose.model("antguessr", new Schema({
-    leaderboard: [{
-        name: String,
-        score: Number,
-    }],
-}), "antguessr")
-
-if (await leaderboardModel.findOne({}) == null) {
-    const emptyEntry = { leaderboard: [] }
-    await leaderboardModel.insertMany([emptyEntry])
-}
 
 interface QuizSession {
     state: "nextQuestion" | { answering: string } | "enterName"
@@ -30,6 +16,8 @@ interface QuizSession {
 
 const sessions: Record<string, QuizSession> = {}
 const offerings = getRandomizedOfferings()
+
+const highScores: HighScore[] = []
 
 app.use(express.json())
 
@@ -110,13 +98,11 @@ app.post("/api/privileged/save-score", async (req, res) => {
     const name = (req.body?.name || "").toString().trim() as string
 
     if (score > 0 && name) {
-        const highScores = (await leaderboardModel.findOne({}))!
+        const insertAt = highScores.findIndex(({ score: lbScore }) => lbScore! < score)
+        if (insertAt === -1) highScores.push({ name, score })
+        else highScores.splice(insertAt, 0, { name, score })
 
-        const insertAt = highScores.leaderboard.findIndex(({ score: lbScore }) => lbScore! < score)
-        if (insertAt === -1) highScores.leaderboard.push({ name, score })
-        else highScores.leaderboard.splice(insertAt, 0, { name, score })
-
-        await leaderboardModel.updateOne({}, { $set: { leaderboard: highScores.leaderboard.slice(0, 50) } })
+        highScores.splice(50)
 
         return res.status(200).json({ ranking: insertAt + 1 + 1 })
     } else {
@@ -125,8 +111,7 @@ app.post("/api/privileged/save-score", async (req, res) => {
 })
 
 app.get("/api/leaderboard", async (_req, res) => {
-    const data = await leaderboardModel.findOne({})
-    res.json(data?.leaderboard)
+    res.json(highScores)
 })
 
 const port = process.env.PORT || 3939
