@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid"
 import mongoose, { Schema } from "mongoose"
 import { AnswerResponse, Question, SavedOffering, StartGameResponse } from "./types"
 import { createOptionsFromGPA, makeQuestionID, transformGPA } from "./util"
-import { getCourseGradeData, getNextOfferingGPA, getRandomizedOfferings } from "./course"
+import { getNextOfferingGPA, getRandomizedOfferings } from "./course"
 const app = express()
 
 await mongoose.connect(process.env.MONGO_URI || "mongodb://127.0.0.1/antguessr")
