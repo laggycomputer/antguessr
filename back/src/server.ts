@@ -2,21 +2,13 @@ import process from "node:process"
 
 import "dotenv/config"
 import express from "express"
-import createClient from "openapi-fetch"
 import { v4 as uuidv4 } from "uuid"
 
 import mongoose, { Schema } from "mongoose"
-import type { paths } from "./anteaterapi"
-import { courses, years } from "./course-pool"
-import { AnswerResponse, Question, StartGameResponse } from "./types"
-import { makeQuestionID, randRange, shuffle, transformGPA } from "./util"
+import { AnswerResponse, Question, SavedOffering, StartGameResponse } from "./types"
+import { createOptionsFromGPA, makeQuestionID, transformGPA } from "./util"
+import { getCourseGradeData, getNextOfferingGPA, getRandomizedOfferings } from "./course"
 const app = express()
-
-const headers = process.env.ANTEATER_API_TOKEN ? { Authorization: `Bearer ${process.env.ANTEATER_API_TOKEN}` } : undefined
-const client = createClient<paths>({
-    baseUrl: process.env.ANTEATER_API_ENDPOINT || "https://anteaterapi.com",
-    headers,
-})
 
 await mongoose.connect(process.env.MONGO_URI || "mongodb://127.0.0.1/antguessr")
 const leaderboardModel = mongoose.model("antguessr", new Schema({
@@ -37,23 +29,7 @@ interface QuizSession {
 }
 
 const sessions: Record<string, QuizSession> = {}
-
-type GradeData = paths["/v2/rest/grades/aggregateByCourse"]["get"]["responses"]["200"]["content"]["application/json"]["data"][0]
-type SavedOffering = [[string, string, string], GradeData | undefined]
-const offerings = shuffle(courses.map(c => years.map(y => [[...c, y], undefined] as SavedOffering)).flat())
-
-
-// app.use((_req, res, next) => {
-//     res.header("Access-Control-Allow-Origin", "*")
-//     res.header("Access-Control-Allow-Headers", "*")
-//     next()
-// })
-
-app.set("trust proxy", 1)
-
-app.get("/api/hi", (_req, res) => {
-    res.send("hi")
-})
+const offerings = getRandomizedOfferings()
 
 app.use(express.json())
 
@@ -69,66 +45,27 @@ app.post("/api/start-game", (_req, res) => {
 })
 
 app.use("/api/privileged/*", (req, res, next) => {
-    if (!("authorization" in req.headers)) {
-        return res.status(401).send("get a session kid")
-    }
+    // Missing auth header
+    if (!("authorization" in req.headers)) return res.status(401).send("get a session kid")
 
+    // Token exists but is invalid
     const tok = (req.headers?.["authorization"] ?? "").replace("Bearer ", "")
-    if (!(tok in sessions)) {
-        return res.status(401).send("bad session")
-    }
+    if (!(tok in sessions)) return res.status(401).send("bad session")
 
     req.headers["authorization"] = tok
-
     return next()
 })
 
 app.get("/api/privileged/question", async (req, res) => {
     const session = req.headers["authorization"] as string
-    if (sessions[session]?.state !== "nextQuestion") {
-        return res.status(401).send("answer your question first!")
-    }
+    if (sessions[session]?.state !== "nextQuestion") return res.status(401).send("answer your question first!")
 
-    let data
-    let year
-    while (!data) {
-        const offering = offerings.pop() as SavedOffering
-        let [[department, courseNumber], existingData] = offering
-        year = offering[0][2]
-        data = existingData ?? await client.GET("/v2/rest/grades/aggregateByCourse", {
-            params: {
-                query: {
-                    department,
-                    courseNumber,
-                    year,
-                },
-            },
-        }).then(r => r.data?.data[0]) as GradeData
-        if (data && "averageGPA" in data) {
-            data.averageGPA = transformGPA(data.averageGPA as number, true)
-        }
-        offering[1] = data
-        offerings.unshift(offering)
-    }
+    const { data, year } = await getNextOfferingGPA(offerings)
 
     const questionId = makeQuestionID(data.department, data.courseNumber, (year as string).toString())
     sessions[session].state = { answering: questionId }
 
-    const buckets = [
-        [0, 2],
-        [2, 2.5],
-        [2.5, 3],
-        [3, 3.25],
-        [3.25, 3.5],
-        [3.5, 4],
-    ] as [number, number][]
-
-    const bucket = buckets.findIndex(([lower, upper]) => lower < data.averageGPA && data.averageGPA <= upper)
-    buckets.splice(bucket, 1)
-    const options = Array.from(new Set([
-        ...buckets.map(([lower, upper]) => transformGPA(randRange(lower, upper), false)),
-        data.averageGPA,
-    ].toSorted()))
+    const options = createOptionsFromGPA(data)
 
     return res.json({
         id: questionId,
@@ -146,21 +83,20 @@ app.post("/api/privileged/answer", (req, res) => {
     const question = offerings.find(([[dept, courseNum, year]]) =>
         makeQuestionID(dept, courseNum, year.toString()) == (sessions[session]?.state as { answering: string }).answering) as SavedOffering
     const correct = question[1]?.averageGPA?.toString() == req.body?.answer
+    let response: AnswerResponse
     if (correct) {
         sessions[session].score += 1
         sessions[session].state = "nextQuestion"
-        return res.json({
-            correct,
-            score: sessions[session].score,
-        } as AnswerResponse)
+        response = { correct, score: sessions[session].score }
     } else {
         sessions[session].state = "enterName"
-        return res.json({
+        response = {
             correct,
-            actual: question[1]?.averageGPA,
+            actual: question[1]?.averageGPA!,
             score: sessions[session].score,
-        } as AnswerResponse)
+        }
     }
+    return res.json(response)
 })
 
 app.post("/api/privileged/save-score", async (req, res) => {
@@ -177,8 +113,7 @@ app.post("/api/privileged/save-score", async (req, res) => {
         const highScores = (await leaderboardModel.findOne({}))!
 
         const insertAt = highScores.leaderboard.findIndex(({ score: lbScore }) => lbScore! < score)
-        
-        if (insertAt === -1) highScores.leaderboard.push({ name, score });
+        if (insertAt === -1) highScores.leaderboard.push({ name, score })
         else highScores.leaderboard.splice(insertAt, 0, { name, score })
 
         await leaderboardModel.updateOne({}, { $set: { leaderboard: highScores.leaderboard.slice(0, 50) } })
