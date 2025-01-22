@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid"
 
 import mongoose, { Schema } from "mongoose"
 import { AnswerResponse, Question, SavedOffering, StartGameResponse } from "./types"
-import { createOptionsFromGPA, makeQuestionID, transformGPA } from "./util"
+import { createOptionsFromGPA, makeQuestionID } from "./util"
 import { getNextOfferingGPA, getRandomizedOfferings } from "./course"
 const app = express()
 
