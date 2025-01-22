@@ -41,6 +41,9 @@ function LeaderboardTable({ leaderboard }: { leaderboard: HighScore[] })  {
     </table>
 }
 
+// generally bad practice to use global scope variables
+let firstRun = true
+
 export default function QuizApp() {
     const [session, setSession] = useState<string | undefined>()
     const [currentQuestion, setCurrentQuestion] = useState<Question | undefined>()
@@ -52,6 +55,10 @@ export default function QuizApp() {
     const [disableAnswering, setDisableAnswering] = useState(false)
     
     useEffect(() => {
+        // ... but here it avoids double-fetching a question
+        if (!firstRun) return
+        firstRun = false
+
         startSession().then(({ id }) => {
             setSession(id)
             getNextQuestion(id)
